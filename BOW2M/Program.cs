@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BOW2M
 {
@@ -12,32 +9,32 @@ namespace BOW2M
         static int Main(string[] args)
         {
             var cmdline = ParseCommandLineToSettingsAndArgs(args);
-            if (!cmdline.Slashed.ContainsKey("/WAV") || !cmdline.Slashed.ContainsKey("/MP3"))
+            if (!cmdline.Options.ContainsKey("/WAV") || !cmdline.Options.ContainsKey("/MP3"))
             {
                 Instructions();
                 return 1;
             }
 
             var bitrate = 218;
-            if (cmdline.Slashed.ContainsKey("/BITRATE"))
+            if (cmdline.Options.ContainsKey("/BITRATE"))
             {
-                if (!int.TryParse(cmdline.Slashed["/BITRATE"].ToString(), out bitrate))
+                if (!int.TryParse(cmdline.Options["/BITRATE"].ToString(), out bitrate))
                 {
                     Console.WriteLine("/BITRATE: must be a number");
                     return 3;
                 }
             }
 
-            var incomingWavFile = cmdline.Slashed["/WAV"].ToString();
+            var incomingWavFile = cmdline.Options["/WAV"].ToString();
             if (!File.Exists(incomingWavFile))
             {
                 Console.WriteLine($"{incomingWavFile} not found.");
                 return 2;
             }
 
-            var outgoingMP3File = cmdline.Slashed["/MP3"].ToString();
+            var outgoingMP3File = cmdline.Options["/MP3"].ToString();
             
-            WaveToMP3(incomingWavFile, outgoingMP3File, bitrate);
+            ConvertWavToMP3(incomingWavFile, outgoingMP3File, bitrate);
             
             return 0;
         }
@@ -49,17 +46,15 @@ namespace BOW2M
             Console.WriteLine("\tbitrate defaults to 128.");
         }
 
-        internal static void WaveToMP3(string inFile, string outFile, int bitrate)
-        {
+        internal static void ConvertWavToMP3(string inFile, string outFile, int bitrate) => 
             Codec.WaveToMP3(inFile, outFile, bitrate);
-        }
 
         internal static CommandLine ParseCommandLineToSettingsAndArgs(string[] args)
         {
             var results = new CommandLine
             {
-                Slashed = new Dictionary<string, object>(),
-                Args = new List<string>()
+                Options = new Dictionary<string, object>(),
+                Arguments = new List<string>()
             };
 
             foreach (string arg in args)
@@ -69,16 +64,16 @@ namespace BOW2M
                     var colonPos = arg.IndexOf(":");
                     if (colonPos > -1)
                     {
-                        results.Slashed[arg.Substring(0, colonPos)] = arg.Substring(colonPos + 1);
+                        results.Options[arg.Substring(0, colonPos)] = arg.Substring(colonPos + 1);
                     }
                     else
                     {
-                        results.Slashed[arg] = true;
+                        results.Options[arg] = true;
                     }
                 }
                 else
                 {
-                    results.Args.Add(arg);
+                    results.Arguments.Add(arg);
                 }
             }
             return results;
@@ -86,8 +81,8 @@ namespace BOW2M
     }
     internal class CommandLine
     {
-        public Dictionary<string, object> Slashed { get; set; }
-        public List<string> Args { get; set; }
+        public Dictionary<string, object> Options { get; set; }
+        public List<string> Arguments { get; set; }
     }
 
 }
